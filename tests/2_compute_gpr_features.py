@@ -41,6 +41,7 @@ scoring = [
     "r2",
 ]
 
+stratified = True
 cv = LeaveOneGroupOut()
 
 for n_features in [1000, 1500, 2000, 2500, 3000, 3500]:
@@ -65,12 +66,15 @@ for n_features in [1000, 1500, 2000, 2500, 3000, 3500]:
                     normalize_y=True,
                     n_restarts_optimizer=100,
                     random_state=42,
+                    stratified=stratified,
+                    n_repeats=2,
                 ),
                 name="fastgauss",
             )
 
         # %% Do CV
-        scores, final_model, inspector = run_cross_validation(
+        # scores, final_model, inspector = run_cross_validation(
+        scores = run_cross_validation(
             X=["f_.*"],
             X_types={"continuous": ["f_.*"]},
             y="age",
@@ -78,23 +82,26 @@ for n_features in [1000, 1500, 2000, 2500, 3000, 3500]:
             model=creator,
             cv=cv,
             groups=groups,
-            return_estimator="all",
+            return_estimator="cv",
+            # return_estimator="all",
             seed=42,
             scoring=scoring,
-            return_inspector=True,
+            # return_inspector=True,
         )
         scores["model"] = "gauss"
         scores["n_features"] = n_features
 
         out_prefix = f"results_{data_kind}_{n_splits}_splits_{n_features}_features"
+        if stratified:
+            out_prefix += "_stratified"
         out_path = Path(__file__).parent / "results"
 
         scores.to_csv(out_path / f"{out_prefix}_cv_scores.csv", index=False)
 
-        with open(out_path / f"{out_prefix}_inspector.pkl", "wb") as f:
-            pickle.dump(inspector, f)
+        # with open(out_path / f"{out_prefix}_inspector.pkl", "wb") as f:
+        #     pickle.dump(inspector, f)
 
-        with open(out_path / f"{out_prefix}_final_model.pkl", "wb") as f:
-            pickle.dump(final_model, f)
+        # with open(out_path / f"{out_prefix}_final_model.pkl", "wb") as f:
+        #     pickle.dump(final_model, f)
 
 # %%

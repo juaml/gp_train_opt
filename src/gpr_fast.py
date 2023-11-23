@@ -17,6 +17,10 @@ from sklearn.gaussian_process.kernels import (
 )
 
 from julearn.utils import logger
+from julearn.model_selection import (
+    RepeatedContinuousStratifiedKFold,
+    ContinuousStratifiedKFold,
+)
 
 
 class fastGaussianProcessRegressor(RegressorMixin, BaseEstimator):
@@ -26,9 +30,10 @@ class fastGaussianProcessRegressor(RegressorMixin, BaseEstimator):
     The final prediction is the average of prediction of all K models
     """
 
-    def __init__(self, n_splits=5, n_repeats=1, **kwargs) -> None:
+    def __init__(self, n_splits=5, n_repeats=1, stratified=False, **kwargs):
         self.n_splits = n_splits
         self.n_repeats = n_repeats
+        self.stratified = stratified
         self.gpr_model = GaussianProcessRegressor(**kwargs)
 
     def fit(self, X, y):
@@ -39,16 +44,31 @@ class fastGaussianProcessRegressor(RegressorMixin, BaseEstimator):
         if not isinstance(y, np.ndarray):
             y_ = np.array(y)
         if self.n_repeats > 1:
-            folds = RepeatedKFold(
-                n_splits=self.n_splits, n_repeats=self.n_repeats)
+            if self.stratified == True:
+                logger.info("Using stratified splits (repeated)")
+                folds = RepeatedContinuousStratifiedKFold(
+                    n_splits=self.n_splits,
+                    n_repeats=self.n_repeats,
+                    method="quantile",
+                    n_bins=10,
+                )
+            else:
+                folds = RepeatedKFold(
+                    n_splits=self.n_splits, n_repeats=self.n_repeats)
         else:
-            folds = KFold(n_splits=self.n_splits)
+            if self.stratified == True:
+                logger.info("Using stratified splits")
+                folds = ContinuousStratifiedKFold(
+                    n_splits=self.n_splits, method="quantile", n_bins=10
+                )
+            else:
+                folds = KFold(n_splits=self.n_splits)
         logger.info(f"Using {folds}")
         # bins = # partition into bins the y
         # folds = StratifiedKFold(n_splits=self.n_splits)
         # Use folds.split(X, bins)
         models = []
-        for _, test_index in folds.split(X):
+        for _, test_index in folds.split(X, y):
             t_model = clone(self.gpr_model)
             t_model.fit(X_[test_index], y_[test_index])
             models.append(t_model)
@@ -66,6 +86,7 @@ class fastGaussianProcessRegressor(RegressorMixin, BaseEstimator):
             **self.gpr_model.get_params(deep=deep),
             n_splits=self.n_splits,
             n_repeats=self.n_repeats,
+            stratified=self.stratified,
         )
         return out
 
