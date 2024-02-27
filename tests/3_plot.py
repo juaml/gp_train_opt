@@ -123,6 +123,8 @@ axes[1].set_ylabel("Fit time (s)")
 
 fig.suptitle(f"fastGPR performance\nby number of splits and repeats")
 plt.savefig(figs_path / f"fig_{data_kind}_repeats_splits.pdf", bbox_inches="tight")
+fig.suptitle(None)
+plt.savefig(figs_path / f"fig_{data_kind}_repeats_splits_paper.pdf", bbox_inches="tight")
 stats_df.to_csv(figs_path / f"results_{data_kind}_repeats_splits.csv")
 base_stats.to_csv(figs_path / f"results_{data_kind}_GPR.csv")
 
@@ -184,6 +186,8 @@ axes[1].set_xticklabels(
 
 fig.suptitle("fastGPR performance\nby number of features and splits")
 plt.savefig(figs_path / f"fig_{data_kind}_features_splits.pdf", bbox_inches="tight")
+fig.suptitle(None)
+plt.savefig(figs_path / f"fig_{data_kind}_features_splits_paper.pdf", bbox_inches="tight")
 stats_df.to_csv(figs_path / f"results_{data_kind}_features_splits.csv")
 
 # %%
