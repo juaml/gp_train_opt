@@ -49,3 +49,9 @@ cover
 */junifer_jobs/
 src/logs/
 src/*.submit
+data/*.csv
+tests/results/*.csv
+tests/results/*.pkl
+tests/results_bu
+tests/figs/*.csv
+tests/figs/*.pdf
